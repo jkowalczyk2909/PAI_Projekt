@@ -3,6 +3,25 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
+const expressSwagger = require("express-swagger-generator")(app);
+
+let options = {
+  swaggerDefinition: {
+      info: {
+          description: 'Baza danych dziennika elektronicznego',
+          title: 'PAI projekt',
+          version: '1.0.0',
+      },
+      host: 'localhost:8080',
+      produces: [
+          "application/json"
+      ],
+      schemes: ['http']
+  },
+  basedir: "D:/PAI/_projekt/baza", //app absolute path
+  files: ['./*.js']
+};
+expressSwagger(options);
 
 const db = require("./models/index");
 const { sequelize, Sequelize } = require("./models/index");
@@ -38,6 +57,13 @@ app.listen(PORT, () => {
 
 // ROUTES //
 
+/**
+ * This function comment is parsed by doctrine
+ * @route POST /api/login
+ * @param {string} login.query.required - username
+ * @param {string} password.query.required - user's password.
+ * @returns {object} 200 - Informacje o użytkowniku
+ */
 app.post("/api/login", (request, response) => {
   let login = request.body.login;
   let password = request.body.password;
@@ -57,6 +83,13 @@ app.post("/api/login", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @route GET /api/subject_name/:student/:id
+ * @param {number} student.params.required - ID ucznia
+ * @param {number} id.params.required - ID przedmiotu
+ * @returns {object} 200 - Informacje o uczniu i przedmiocie
+ */
 app.get("/api/subject_name/:student/:id", async (request, response) => {
   let id = request.params.id;
   let student_id = request.params.student;
@@ -72,12 +105,25 @@ app.get("/api/subject_name/:student/:id", async (request, response) => {
   response.send(output);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Kategorie ocen
+ * @route GET /api/category
+ * @returns {object} 200 - Informacje o kategoriach ocen
+ */
 app.get("/api/category", async (request, response) => {
   const data = await db.kategorie.findAll();
 
   response.send(data);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Przedmioty
+ * @route GET /api/subject/:id
+ * @param {number} id.params.required - ID przedmiotu
+ * @returns {object} 200 - Informacje o wybranym przedmiocie
+ */
 app.get("/api/subject/:id", async (request, response) => {
   let id = request.params.id;
 
@@ -85,18 +131,39 @@ app.get("/api/subject/:id", async (request, response) => {
 
   response.send(data.name);
 });
+
+/**
+ * This function comment is parsed by doctrine
+ * @group Przedmioty
+ * @route GET /api/subject
+ * @returns {object} 200 - Informacje o przedmiotach
+ */
 app.get("/api/subject", async (request, response) => {
   const data = await db.przedmioty.findAll();
 
   response.send(data);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Użytkownicy
+ * @route GET /api/users
+ * @returns {object} 200 - Informacje o użytkownikach
+ */
 app.get("/api/users", async (request, response) => {
   const data = await db.uzytkownicy.findAll({attributes: ['id','login','full_name','teacher']});
 
   response.send(data);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Oceny
+ * @route GET /api/notes/:id/:teacher
+ * @param {number} id.params.required - Jeśli parametr teacher = 1, to ID przedmiotu w przeciwnym razie ID ucznia
+ * @param {number} teacher.params.required - Czy nauczyciel
+ * @returns {object} 200 - Informacje o ocenach ucznia/w przedmiocie
+ */
 app.get("/api/notes/:id/:teacher", async (request, response) => {
   let id = request.params.id;
   let isTeacher = request.params.teacher == 1;
@@ -163,6 +230,16 @@ app.get("/api/notes/:id/:teacher", async (request, response) => {
   response.send(output);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Użytkownicy
+ * @route POST /api/users
+ * @param {string} name.query.required - Imię i nazwisko
+ * @param {string} login.query.required - Login
+ * @param {string} password.query.required - Hasło
+ * @param {string} teacher.query.required - Czy jest nauczycielem
+ * @returns {object} 200 - Tworzy użytkownika
+ */
 app.post("/api/users", (request, response) => {
   let name = request.body.name;
   let login = request.body.login;
@@ -184,6 +261,13 @@ app.post("/api/users", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Oceny
+ * @route GET /api/note/:id
+ * @param {number} id.params.required - ID oceny
+ * @returns {object} 200 - Szczegóły wybranej oceny
+ */
 app.get("/api/note/:id", async (request, response) => {
   let id = request.params.id;
 
@@ -193,6 +277,16 @@ app.get("/api/note/:id", async (request, response) => {
 });
 
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Oceny
+ * @route PUT /api/note/:id
+ * @param {number} id.params.required - ID oceny
+ * @param {string} value.query.required - Wartość oceny
+ * @param {number} category_id.query.required - ID kategorii
+ * @param {string} comment.query.required - Komentarz
+ * @returns {object} 200 - Aktualizuje ocenę
+ */
 app.put("/api/note/:id", (request, response) => {
   let id = request.params.id;
   let value = request.body.value;
@@ -208,6 +302,13 @@ app.put("/api/note/:id", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Oceny
+ * @route DELETE /api/note/:id
+ * @param {number} id.params.required - ID oceny
+ * @returns {object} 200 - Usuwa ocenę
+ */
 app.delete("/api/note/:id", (request, response) => {
   let id = request.params.id;
 
@@ -216,6 +317,13 @@ app.delete("/api/note/:id", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Użytkownicy
+ * @route GET /api/users/:id
+ * @param {number} id.params.required - ID użytkownika
+ * @returns {object} 200 - Szczegóły wybranego użytkownika
+ */
 app.get("/api/users/:id", async (request, response) => {
   let id = request.params.id;
 
@@ -224,6 +332,17 @@ app.get("/api/users/:id", async (request, response) => {
   response.send(data);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Użytkownicy
+ * @route PUT /api/users/:id
+ * @param {number} id.params.required - ID użytkownika
+ * @param {string} name.query.required - Imię i nazwisko
+ * @param {string} login.query.required - Login
+ * @param {string} password.query.required - Hasło
+ * @param {string} teacher.query.required - Czy jest nauczycielem
+ * @returns {object} 200 - Aktualizuje wybranego użytkownika
+ */
 app.put("/api/users/:id", (request, response) => {
   let id = request.params.id;
   let name = request.body.name;
@@ -248,6 +367,13 @@ app.put("/api/users/:id", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Użytkownicy
+ * @route DELETE /api/users/:id
+ * @param {number} id.params.required - ID użytkownika
+ * @returns {object} 200 - Usuwa wybranego użytkownika
+ */
 app.delete("/api/users/:id", (request, response) => {
   let id = request.params.id;
 
@@ -256,6 +382,13 @@ app.delete("/api/users/:id", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Przedmioty
+ * @route POST /api/subject
+ * @param {string} name.query.required - Nazwa przedmiotu
+ * @returns {object} 200 - Tworzy nowy przedmiot
+ */
 app.post("/api/subject", (request, response) => {
   let name = request.body.name;
 
@@ -271,6 +404,14 @@ app.post("/api/subject", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Przedmioty
+ * @route PUT /api/subject/:id
+ * @param {number} id.params.required - ID przedmiotu
+ * @param {string} name.query.required - Nazwa przedmiotu
+ * @returns {object} 200 - Aktualizuje przedmiot
+ */
 app.put("/api/subject/:id", (request, response) => {
   let id = request.params.id;
   let name = request.body.name;
@@ -287,6 +428,13 @@ app.put("/api/subject/:id", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Przedmioty
+ * @route DELETE /api/subject/:id
+ * @param {number} id.params.required - ID przedmiotu
+ * @returns {object} 200 - Usuwa przedmiot
+ */
 app.delete("/api/subject/:id", (request, response) => {
   let id = request.params.id;
 
@@ -295,6 +443,16 @@ app.delete("/api/subject/:id", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Kategorie ocen
+ * @route POST /api/category
+ * @param {number} id.query.required - ID kategorii
+ * @param {string} name.query.required - Nazwa kategorii
+ * @param {number} weight.query.required - Waga oceny
+ * @param {string} color.query.required - Kolor w HEX
+ * @returns {object} 200 - Tworzy nową kategorię ocen
+ */
 app.post("/api/category", (request, response) => {
   let name = request.body.name;
   let weight = request.body.weight;
@@ -314,6 +472,13 @@ app.post("/api/category", (request, response) => {
   });
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Kategorie ocen
+ * @route GET /api/category/:id
+ * @param {number} id.params.required - ID kategorii
+ * @returns {object} 200 - Zwraca szczegóły wybranej kategorii
+ */
 app.get("/api/category/:id", async (request, response) => {
   let id = request.params.id;
 
@@ -322,6 +487,16 @@ app.get("/api/category/:id", async (request, response) => {
   response.send(data);
 });
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Kategorie ocen
+ * @route PUT /api/category/:id
+ * @param {number} id.params.required - ID kategorii
+ * @param {string} name.query.required - Nazwa kategorii
+ * @param {number} weight.query.required - Waga oceny
+ * @param {string} color.query.required - Kolor w HEX
+ * @returns {object} 200 - Aktualizuje kategorię ocen
+ */
 app.put("/api/category/:id", (request, response) => {
   let id = request.params.id;
   let name = request.body.name;
@@ -343,6 +518,13 @@ app.put("/api/category/:id", (request, response) => {
 });
 
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Kategorie ocen
+ * @route DELETE /api/category/:id
+ * @param {number} id.params.required - ID kategorii
+ * @returns {object} 200 - Usuwa kategorię ocen
+ */
 app.delete("/api/category/:id", (request, response) => {
   let id = request.params.id;
 
@@ -352,6 +534,17 @@ app.delete("/api/category/:id", (request, response) => {
 });
 
 
+/**
+ * This function comment is parsed by doctrine
+ * @group Oceny
+ * @route POST /api/note
+ * @param {string} note.query.required - Wartość oceny
+ * @param {number} category.query.required - ID kategorii
+ * @param {number} subject_id.query.required - ID przedmiotu
+ * @param {number} student_id.query.required - ID ucznia
+ * @param {string} comment.query.required - Komentarz
+ * @returns {object} 200 - Tworzy nową ocenę
+ */
 app.post("/api/note", (request, response) => {
   let note = request.body.note;
   let category = request.body.category;
