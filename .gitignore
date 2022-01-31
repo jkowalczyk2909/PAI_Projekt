@@ -3,7 +3,7 @@ node_modules
 /dist
 /dziennik/node_modules
 /baza/node_modules
-
+.gitignore
 
 # local env files
 .env.local
